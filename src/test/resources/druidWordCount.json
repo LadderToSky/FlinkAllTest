@@ -1,0 +1,52 @@
+{
+  "dataSources": [
+    {
+      "spec": {
+        "dataSchema": {
+          "dataSource": "flinkToDruidTest2",
+          "parser": {
+            "type": "string",
+            "parseSpec": {
+              "format": "json",
+              "timestampSpec": {
+                "column": "timestamp",
+                "format": "auto"
+              },
+              "dimensionsSpec": {
+                "dimensions": [
+                  "ColTwo"
+                ],
+                "dimensionExclusions": [],
+                "spatialDimensions": []
+              }
+            }
+          },
+          "metricsSpec": [
+            {
+              "type": "count",
+              "name": "count"
+            }
+          ],
+          "granularitySpec": {
+            "type": "uniform",
+            "segmentGranularity": "MINUTE",
+            "queryGranularity": "NONE"
+          }
+        },
+        "tuningConfig": {
+          "type": "realtime",
+          "maxRowsInMemory": 100000,
+          "intermediatePersistPeriod": "PT1m",
+          "windowPeriod": "PT1M"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "zookeeper.connect": "192.168.183.133:2181",
+    "druid.selectors.indexing.serviceName": "druid/overlord",
+    "druid.discovery.curator.path": "/druid/discovery",
+    "druidBeam.taskLocator": "overlord",
+    "druidBeam.overlordPollPeriod": "PT5S"
+  }
+}
