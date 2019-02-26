@@ -1,20 +1,8 @@
 package com.Inkbamboo.Flink.Tabledemo
 
-import java.util
-import java.util.Properties
-
-import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.api.common.typeinfo.TypeInformation
-import org.apache.flink.api.scala.ExecutionEnvironment
-import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010
 import org.apache.flink.table.api.{Table, TableEnvironment, Types}
 import org.apache.flink.table.sinks.{CsvTableSink, TableSink}
 import org.apache.flink.types.Row
-import org.apache.kafka.common.config.ConfigDef.Type
-import scala.collection.JavaConversions._
-import  scala.collection.JavaConverters._
 
 /**
   * Created By InkBamboo
