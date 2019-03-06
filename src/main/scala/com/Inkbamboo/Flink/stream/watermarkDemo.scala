@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.streamdemo
+package com.Inkbamboo.Flink.stream
 
 import java.util.Properties
 
@@ -43,9 +43,8 @@ object watermarkDemo extends  App {
   //val kafkaStream = senv.socketTextStream("localhost",999)
 
   val prop = new Properties()
-  //kafka0.8 需要此参数
   prop.setProperty("bootstrap.servers", "192.168.183.133:9092")
-  prop.setProperty("zookeeper.connect", "192.168.183.133:2181")
+ // prop.setProperty("zookeeper.connect", "192.168.183.133:2181")
   prop.setProperty("group.id", "test")
 
   //收集kafka中的数据
@@ -54,16 +53,17 @@ object watermarkDemo extends  App {
   val kafkaStream  = senv.addSource(kafkaConsumer010)
 
 
-
-  kafkaStream
 //  kafkaStream.timeWindowAll(Time.seconds(5))
 //    .allowedLateness(Time.seconds(2))   //允许数据延迟到2秒
 
-  val res = kafkaStream.flatMap(x=>x.split(" ")).map(x=>new wordcount(x,System.currentTimeMillis()-Random.nextInt(50000),1))
+  val res = kafkaStream
+    .flatMap(x=>x.split(" "))
+    .map(x=>new wordcount(x,System.currentTimeMillis()-Random.nextInt(50000),1))
     //此处按照官方文档设置watermark相较于最新数据时间提前3秒，也就是说在时间窗口中允许乱序数据晚到3秒。
     .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor[wordcount](Time.seconds(3)){
       //此方法是指明获得的数据源中哪个字段用于时间字段，并转换为对应的long类型返回
       override def extractTimestamp(element: wordcount): Long = {
+        println("---------------timestamp------"+element.time)
         element.time
       }
     })
@@ -89,10 +89,10 @@ object watermarkDemo extends  App {
     override def extractTimestamp(element: wordcount, previousElementTimestamp: Long): Long = {
       element.time
     }
-  })*/.keyBy("word")
+  }).keyBy("word")
       .timeWindow(Time.seconds(5))
       .sum("count")
-
+*/
     log.info("------output_info---")
   res.print()
 

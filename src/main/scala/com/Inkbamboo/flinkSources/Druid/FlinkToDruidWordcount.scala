@@ -1,4 +1,4 @@
-package com.Inkbamboo.Druid
+package com.Inkbamboo.flinkSources.Druid
 
 import java.util.Properties
 
@@ -17,9 +17,8 @@ import org.apache.flink.api.common.serialization.AbstractDeserializationSchema
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010
 import org.apache.flink.streaming.api.scala._
-import org.joda.time.{DateTime, Period}
+import org.joda.time.{DateTime}
 import org.scala_tools.time.Imports.Period
-import org.joda.time._
 /**
   * Created By InkBamboo
   * Date: 2019/1/10 18:24
@@ -98,9 +97,9 @@ class SimpleEventBeamFactory2(zkurl:String) extends BeamFactory[wordcount2]
     //****对应json:druid.discovery.curator.path
     val discoveryPath = "/druid/discovery" // Your overlord's druid.discovery.curator.path  ===Services announce themselves under this ZooKeeper path.  zookeepr内部存储druid数据的路径
     //****对应json:dataSource
-    val dataSource = "foo254"   //Provide the location of your Druid dataSource    类似于数据库中的表，指定一个druid中的对应的数据块
+    val dataSource = "foo256"   //Provide the location of your Druid dataSource    类似于数据库中的表，指定一个druid中的对应的数据块
     //****对应json:dimensions
-    val dimensions = IndexedSeq("word")   //呈现的列名,可以有多个
+    val dimensions = IndexedSeq("word","dh12")   //呈现的列名,可以有多个
     //****对应json:spatialDimensions
     val spatialDimensions = Nil
     //****对应json: metricsSpec
@@ -109,9 +108,6 @@ class SimpleEventBeamFactory2(zkurl:String) extends BeamFactory[wordcount2]
     // Expects simpleEvent.timestamp to return a Joda DateTime object.
     //下面的参数配置构成了tranquality使用的json数据的全部内容
     DruidBeams
-      //builder内部的eventtype只支持map类型，否则会报警告：Cannot partition object of class[class com.Inkbamboo.Druid.wordcount2] by time and dimensions. Consider implementing a Partitioner.
-      //并且无法创建成功task任务
-      //修改为map？？？？？？？
       .builder[wordcount2]()(new Timestamper[wordcount2] {
       override def timestamp(a: wordcount2): DateTime = {
         val timestamp = new DateTime(a.timestamp)
@@ -176,7 +172,7 @@ class wordcountschema extends AbstractDeserializationSchema[wordcount2]{
     catch {
       case e=>e.printStackTrace()
     }
-    val word = wordcount2(json.getString("word"),json.getString("timestamp"),json.getInt("count"))
+    val word = wordcount2(json.getString("word"),json.getString("timestamp"),json.getInt("count"),json.getInt("dh12"))
     //word.time = new DateTime().toString
     //val res =  JSONObject.toBean(json,wordcount2.getClass).asInstanceOf[wordcount2]
     //res
@@ -184,6 +180,7 @@ class wordcountschema extends AbstractDeserializationSchema[wordcount2]{
   }
 }
 //{"word":"asdasfa","timestamp":"asdasdf","count":1}
-case class wordcount2(word:String,var timestamp:String,count:Int)
+//kafka-console-producer.sh --broker-list 192.168.183.133:9092 --topic wiki_test
+case class wordcount2(word:String,var timestamp:String,count:Int,dh12:Int)
 
 

@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.streamdemo
+package com.Inkbamboo.Flink.stream
 
 import java.sql.{Connection, DriverManager}
 import java.util.Properties

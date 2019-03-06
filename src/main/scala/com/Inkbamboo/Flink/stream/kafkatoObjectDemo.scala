@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.streamdemo
+package com.Inkbamboo.Flink.stream
 
 import java.util.Properties
 import com.google.gson.Gson

@@ -1,4 +1,4 @@
-package com.Inkbamboo.wikiedits;
+package TmpTest;
 
 import org.apache.flink.api.common.functions.FoldFunction;
 import org.apache.flink.api.java.functions.KeySelector;

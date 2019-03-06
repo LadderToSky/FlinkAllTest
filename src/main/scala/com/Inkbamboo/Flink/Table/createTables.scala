@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.Tabledemo
+package com.Inkbamboo.Flink.Table
 
 import org.apache.flink.table.api.{Table, TableEnvironment, Types}
 import org.apache.flink.table.sinks.{CsvTableSink, TableSink}

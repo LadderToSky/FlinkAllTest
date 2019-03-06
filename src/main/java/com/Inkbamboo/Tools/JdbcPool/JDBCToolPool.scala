@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.JdbcPool
+package com.Inkbamboo.Tools.JdbcPool
 
 import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
 

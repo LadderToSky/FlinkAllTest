@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.streamdemo
+package com.Inkbamboo.Flink.stream
 
 import org.apache.flink.api.java.io.TextInputFormat
 import org.apache.flink.api.java.utils.ParameterTool

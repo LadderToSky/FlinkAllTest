@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.streamdemo
+package com.Inkbamboo.Flink.stream
 
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.datastream.DataStreamUtils

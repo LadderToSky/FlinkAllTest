@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.Inkbamboo.Flink.Tabledemo;
+package com.Inkbamboo.Flink.Stream;
 
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -45,8 +45,9 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 如何计算实时热门商品
+ * 如何计算实时热门商品以及TopN实现
  * https://github.com/wuchong/my-flink-project/blob/master/src/main/java/myflink/HotItems.java
+ *
  */
 public class HotItems {
 
@@ -90,7 +91,7 @@ public class HotItems {
                     }
                 })
                 .keyBy("itemId")
-                .timeWindow(Time.minutes(60), Time.minutes(5))
+                .timeWindow(Time.minutes(20), Time.minutes(5))
                 .aggregate(new CountAgg(), new WindowResultFunction())
                 .keyBy("windowEnd")
                 .process(new TopNHotItems(3))

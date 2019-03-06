@@ -1,4 +1,4 @@
-package com.Inkbamboo.flinkSources.druid;
+package com.Inkbamboo.flinkSources.Druid;
 
 import com.google.common.collect.ImmutableMap;
 import com.metamx.common.logger.Logger;

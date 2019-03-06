@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.Inkbamboo.Flink.batchdemo
+package com.Inkbamboo.Flink.batch
 
 import org.apache.flink.api.scala._
 
