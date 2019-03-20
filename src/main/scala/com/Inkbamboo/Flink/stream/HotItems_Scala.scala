@@ -10,7 +10,6 @@ import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
 import org.apache.flink.api.java.io.PojoCsvInputFormat
 import org.apache.flink.api.java.tuple.{Tuple, Tuple1}
 import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TypeExtractor}
-import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.TimeCharacteristic
@@ -20,7 +19,7 @@ import org.apache.flink.streaming.api.scala.function.WindowFunction
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
-
+import org.apache.flink.api.scala._
 import scala.collection.JavaConversions._
 
 /**scala实现
@@ -51,38 +50,40 @@ object HotItems2 {
     // 创建 PojoCsvInputFormat
     val csvInput = new PojoCsvInputFormat[UserBehavior2](filepath,pojoType,fieldOrder)//.asInstanceOf[PojoTypeInfo[UserBehavior2]]
 
-    //val tmpres = env.readFile(csvInput,filepath.getPath)
     env
       // 创建数据源，得到 UserBehavior 类型的 DataStream
-      .createInput(csvInput)(pojoType)
+      .createInput(csvInput)//(pojoType)
       // 抽取出时间和生成 watermark
       // 原始数据单位秒，将其转成毫秒
       .assignAscendingTimestamps(assign=>assign.timestamp*1000)
       // 过滤出只有点击的数据
       .filter(assign=>assign.behavior=="pv")
       .keyBy("itemId")
-      .timeWindow(Time.minutes(30),Time.minutes(5))
+      .timeWindow(Time.minutes(10),Time.minutes(5))
+      //CountAgg2用于预聚合的聚合函数，WindowResultFunction2窗口聚合函数
       .aggregate(new CountAgg2,new WindowResultFunction2)
       .keyBy("windowEnd")
       .process(new keyProcessTopN(3))
       .print()
 
-    //val tmpres = env.addSource(csvInput)
 
     env.execute("Hot Items Job")
   }
 
 }
 
-//定义为pojo类
 /**
+  *定义为pojo类
+  * pojo类定义：
+  * 个公共类，并且是独立的(不是一个非静态的内部类)
+  * 有一个公共的无参数构造函数
+  * 所有字段要么是公共的，要么有公共的getter和setter
   *
   * @param userId     用户ID
   * @param itemId     商品ID
   * @param categoryId 商品类目ID
   * @param behavior   用户行为, 包括("pv", "buy", "cart", "fav")
   * @param timestamp   行为发生的时间戳，单位秒
-  *
   */
  class UserBehavior2(
  var userId: Long,
@@ -93,6 +94,7 @@ var behavior: String , // 用户行为, 包括("pv", "buy", "cart", "fav")
 var timestamp: Long// 行为发生的时间戳，单位
 ){
   //此处主要用于flink将该类识别为pojo类
+  ////无参构造器
   def this(){
     this(0,0,0,null,0)
   }
@@ -124,14 +126,18 @@ class ItemViewCount2 {
 
 /**
   * COUNT 统计的聚合函数实现，每出现一条记录加一
+  * createAccumulator 对一个窗口内的一个key只进行一次初始化
   */
 class CountAgg2 extends AggregateFunction[UserBehavior2,Long,Long]{
   override def createAccumulator() = 0L
 
+  //根据输入数据对累加器做操作
   override def add(value: UserBehavior2, accumulator: Long): Long = accumulator+1
 
+  //返回最终计算的结果
   override def getResult(accumulator: Long): Long = accumulator
 
+  //合并不同task对每个key计算之后的结果
   override def merge(a: Long, b: Long): Long = a+b
 }
 

@@ -1,8 +1,6 @@
 package com.InkBamboo.Druid;
 
 import com.InkBamboo.Test.wordcount;
-import com.Inkbamboo.flinkSources.druid.DataToDruidDemo;
-import com.esotericsoftware.kryo.Kryo;
 import com.google.common.collect.ImmutableMap;
 import com.metamx.common.logger.Logger;
 import com.metamx.tranquility.config.DataSourceConfig;

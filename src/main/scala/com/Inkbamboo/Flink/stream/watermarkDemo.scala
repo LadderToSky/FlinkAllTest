@@ -58,6 +58,7 @@ object watermarkDemo extends  App {
 
   val res = kafkaStream
     .flatMap(x=>x.split(" "))
+    res
     .map(x=>new wordcount(x,System.currentTimeMillis()-Random.nextInt(50000),1))
     //此处按照官方文档设置watermark相较于最新数据时间提前3秒，也就是说在时间窗口中允许乱序数据晚到3秒。
     .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor[wordcount](Time.seconds(3)){

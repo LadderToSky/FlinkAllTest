@@ -3,8 +3,8 @@ package com.InkBamboo.Test
 import java.io.File
 import java.lang
 
-import com.Inkbamboo.Flink.Tabledemo.HotItems
-import com.Inkbamboo.Flink.Tabledemo.HotItems.ItemViewCount
+import com.Inkbamboo.Flink.Stream.HotItems
+import com.Inkbamboo.Flink.Stream.HotItems.ItemViewCount
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.java.tuple.{Tuple, Tuple1}
 import org.apache.flink.api.java.typeutils.TypeExtractor

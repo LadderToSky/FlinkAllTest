@@ -14,7 +14,8 @@ object WikipediaAnalysis2 {
     properties.setProperty("bootstrap.servers", "192.168.183.135:9092")
     // only required for Kafka 0.8
     properties.setProperty("zookeeper.connect", "192.168.183.135:2181")
-    //properties.setProperty("group.id", "test")
+    //设置kafka的消费组
+    properties.setProperty("group.id", "test")
     //流处理使用StreamExecutionEnvironment   批处理使用ExecutionEnvironment
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     println(StreamExecutionEnvironment.getExecutionEnvironment)
@@ -29,8 +30,7 @@ object WikipediaAnalysis2 {
     streams.print()
       val stream2 = streams.timeWindow(Time.seconds(30))
     println("----------stream2------------------")
-      //fold 算子 中文翻译折叠：源码中解释：针对每个窗口的每个execution进行操作。实际是有点像spark中的fold，针对value值进行操作。
-      //初始值，对每个key生效一次(此说法不准确，请纠正)，value就是针对value值的一些加减乘除等操作
+      //源码翻译：将给定的fold函数应用于每个窗口。针对每个键分别调用窗口的每个求值函数。reduce函数的输出被解释为一个常规的非窗口流。
       val stream3 = stream2.fold(("-----------|",0L))((x,y)=>(y.getUser+x._1,x._2+y.getByteDiff))
       stream3.map(x=>x.toString()).print()
       /**输出到kafka中
