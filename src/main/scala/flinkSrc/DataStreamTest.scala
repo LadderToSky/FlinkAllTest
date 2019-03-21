@@ -2,13 +2,16 @@ package flinkSrc
 
 import java.io.File
 
+import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.api.java.io.PojoCsvInputFormat
 import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TypeExtractor}
 import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.windowing.time.Time
-
+import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.TimeCharacteristic
+import org.apache.flink.streaming.api.windowing.assigners.{EventTimeSessionWindows, SessionWindowTimeGapExtractor}
 
 /**
   * Created By InkBamboo
@@ -21,6 +24,11 @@ import org.apache.flink.streaming.api.windowing.time.Time
 object DataStreamTest extends App {
 
   val senv = StreamExecutionEnvironment.getExecutionEnvironment
+  //设置时间窗口的类型：
+  // eventime  事件时间：数据产生时自带的时间
+  // processtime   处理时间：平台处理数据的时间
+  // IngestionTime  摄入时间:数据进入平台的时间
+  senv.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
  // val denv = ExecutionEnvironment.getExecutionEnvironment
  // val element =  senv.fromElements(new Tuple3("a",2,1511658000),new Tuple3("b",4,1511658000),new Tuple3("a",5,1511658000),new Tuple3("b",2,1511658000))
@@ -41,20 +49,70 @@ object DataStreamTest extends App {
 
   //val dataset = denv.createInput(csvinput)
 
-  /*************************************************************************
+  /************************************************************************************
     * Stream operator测试
-    ************************************************************************/
+    ***********************************************************************************/
   datastream
     //为数据流中的元素分配时间戳，并定期创建watermark，以指示事件时间进度。
     //时间是秒级别的转换为毫秒级别
     .assignAscendingTimestamps(x=>x.timestamp*1000)
     //根据用户动作分组
     .keyBy(x=>x.behavior)
-    .timeWindow(Time.minutes(30),Time.minutes(5))
-    //对每个key的分组进行reduce处理
-    .reduce((x,y)=>new UserBehavior3(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2))
 
+    /*************************************************************************************
+      * [[org.apache.flink.streaming.api.scala.KeyedStream]]
+      * 时间窗口类型
+      *
+      * 滑动窗口，滚动窗口，会话窗口，
+      * 根据时间类型又有细分为：eventimeslidewindow，processtimetumblewindow等
+      * 具体类型查看：[[org.apache.flink.streaming.api.windowing.assigners.WindowAssigner]]的实现
+      */
+    //1.滑动窗口 sliding time windows
+    //.timeWindow(Time.minutes(30),Time.minutes(5))
+    //2.滚动窗口 tumbling time windows
+    //.timeWindow(Time.minutes(30))
+    //3.会话窗口  session time window
+    // 1).设置固定大小的session窗口
+    //.window(EventTimeSessionWindows.withGap(Time.minutes(10)))
+    // 2).动态设置session窗口  sessionWindowTimeGapExtractor用于从数据中提取时间字段
+    /*.window(EventTimeSessionWindows.withDynamicGap(new SessionWindowTimeGapExtractor[UserBehavior3](){
+    override def extract(element: UserBehavior3): Long = {
+      element.timestamp*1000
+    }
+  }))*/
+    /********************************************************************************
+      * 计数窗口
+      *  sliding count windows   滑动计数窗口   sliding time window  每个窗口向后滑动多少个元素
+      *  tumble count windows    滚动计数窗口   size个元素作为一个窗口
+      */
+    //.countWindow(100)
+    //.countWindow(100,20)
+    //对每个key的分组进行reduce处理  下面两个用法基本一致
+    //.reduce((x,y)=>new UserBehavior3(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2))
+    /*.reduce(new ReduceFunction[UserBehavior3] {
+      override def reduce(x: UserBehavior3, y: UserBehavior3): UserBehavior3 = {
+        new UserBehavior3(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2)
+      }
+      })*/
+    //一个窗口对数据根据给定的字段，确定最大值max，最小值min，对指定字段求和，根据指定字段.
+    //对于嵌套类型可以使用点来做类型下推，"field.field2"
+    //.max("timestamp")
+    //.min(4)
+    //.sum(4)
+    //--------------------------------------------------------------
+    // 状态函数  ?????????????
+    //--------------------------------------------------------------
+    //创建一个新的DataStream，其中只包含满足给定有状态筛选器谓词的元素。要使用状态分区，必须使用. keyby(..)定义一个键，
+    // 在这种情况下，每个键将保留一个独立的状态。 【注意】，用户状态对象UserBehavior3需要是可序列化的
+    //第二个参数，具体作用不明,状态判定的函数???????。
+    //.filterWithState[UserBehavior3]((x,y)=>(x.timestamp%10>5,y))
+    //.mapWithState[Long,UserBehavior3]((x,y)=>(x.timestamp*10000,y))
+    //.flatMapWithState()
+    //将键控流发布为可查询的ValueState实例。返回类型QueryableStateStream
+    //.asQueryableState()
 
+      .print()
+  senv.execute("DataStreamTest")
 }
 
 //pojo
@@ -69,5 +127,9 @@ class UserBehavior3(
   //无参构造器
   def this(){
     this(0,0,0,null,0)
+  }
+
+  override def toString: String = {
+    ""+userId+"  "+itemId+" "+categoryId+" "+behavior+" "+timestamp+"->>>>"
   }
 }
