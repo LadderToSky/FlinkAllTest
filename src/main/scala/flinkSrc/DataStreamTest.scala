@@ -7,7 +7,7 @@ import org.apache.flink.api.java.io.PojoCsvInputFormat
 import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TypeExtractor}
 import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.core.fs.Path
-import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.scala.{OutputTag, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
@@ -52,7 +52,7 @@ object DataStreamTest extends App {
   /************************************************************************************
     * Stream operator测试
     ***********************************************************************************/
-  datastream
+ val dres =  datastream
     //为数据流中的元素分配时间戳，并定期创建watermark，以指示事件时间进度。
     //时间是秒级别的转换为毫秒级别
     .assignAscendingTimestamps(x=>x.timestamp*1000)
@@ -110,8 +110,35 @@ object DataStreamTest extends App {
     //.flatMapWithState()
     //将键控流发布为可查询的ValueState实例。返回类型QueryableStateStream
     //.asQueryableState()
+    /*****************************************************************************************
+      *
+      *[[org.apache.flink.streaming.api.scala.DataStream]]类operator
+      * **************************************************************************************
+      */
+    //返回值类型为DataStream
+    .reduce((x,y)=>new UserBehavior3(x.userId,x.itemId,y.categoryId,y.behavior,y.timestamp))
+   //获取底层java DataStream对象
+     //.javaStream
+   //返回TypeInformation类型的信息
+    // .dataType
+  //获取执行参数对象，并用于获取指定的参数配置或者设置配置参数
+   //  .executionConfig
+  //设置最大并行度，设置了job动态缩放的上限
+     .setMaxParallelism(200)
+   //获得算子执行的最小资源量，包括cpu，内存等 ResourceSpec{cpuCores=0.0, heapMemoryInMB=0, directMemoryInMB=0, nativeMemoryInMB=0, stateSizeInMB=0}
+     //.minResources
+  //返回此操作的首选资源  ResourceSpec{cpuCores=0.0, heapMemoryInMB=0, directMemoryInMB=0, nativeMemoryInMB=0, stateSizeInMB=0}
+     //.preferredResources
+   //设置该datastream的名字，用于监控界面以及日志中使用
+     .name("datastreamTest")
+   //为当前的operator设置id，该id在该job中必须唯一，主要使用在开启checkpoint的情况下用于job的恢复。
+     .uid("reduce")
+   //没懂这个是什么作用？？？
+     .getSideOutput[UserBehavior3](OutputTag[UserBehavior3]("testData"))
 
-      .print()
+  //dres.print()
+
+   println(dres)
   senv.execute("DataStreamTest")
 }
 
