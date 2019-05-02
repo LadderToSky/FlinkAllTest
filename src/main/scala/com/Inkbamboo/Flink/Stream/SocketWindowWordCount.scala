@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import org.apache.flink.api.java.io.TextInputFormat
 import org.apache.flink.api.java.utils.ParameterTool
@@ -21,7 +21,7 @@ object SocketWindowWordCount {
     }
 
     // get the execution environment
-    val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createRemoteEnvironment("192.168.183.128", 6123)
+    val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createRemoteEnvironment("localhost", 6123)
     val path = new Path("")
     val format = new TextInputFormat(path)
     //设置文件编码格式

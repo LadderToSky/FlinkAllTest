@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.Inkbamboo.Flink.batch
+package com.Inkbamboo.Flink.Batch
 
 import org.apache.flink.api.scala._
 
@@ -46,9 +46,11 @@ object wordCount {
       .writeAsCsv("E:\\testfile\\","\n"," ")*/
 
     case class word(word:String,count:Int)
-    val dataset = env.fromElements(word("helloword",1),word("Inkbamboo",2))
+    val dataset = env.fromElements(word("helloword",1),word("Inkbamboo",2),
+      word("helloword",1),word("Inkbamboo",2),
+      word("helloword",3),word("Inkbamboo",2))
 
-    dataset.groupBy("word._1").sum(1).print()
+    dataset.groupBy("word").sum(1).print()
     println("--------One------")
    dataset.groupBy(0, 1).sum(1).print()
 

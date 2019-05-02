@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import java.util.Properties
 

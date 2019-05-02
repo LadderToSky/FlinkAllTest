@@ -1,26 +1,16 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import java.util.Properties
-import com.google.gson.Gson
-import com.metamx.common.Granularity
-import com.metamx.tranquility.beam.{Beam, ClusteredBeamTuning}
-import com.metamx.tranquility.druid.{DruidBeams, DruidLocation, DruidRollup, SpecificDruidDimensions}
-import com.metamx.tranquility.flink.BeamFactory
-import com.metamx.tranquility.typeclass.Timestamper
-import io.druid.granularity.QueryGranularities
-import io.druid.query.aggregation.{DoubleSumAggregatorFactory, LongSumAggregatorFactory}
-import net.sf.json.{JSONArray, JSONObject}
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.BoundedExponentialBackoffRetry
-import org.apache.flink.api.common.serialization.{AbstractDeserializationSchema, DeserializationSchema}
+import net.sf.json.{JSONObject}
+import org.apache.flink.api.common.serialization.{AbstractDeserializationSchema}
 import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010
 import org.apache.flink.streaming.api.scala._
-import org.joda.time.{DateTime, Period}
 
 /**
   * Created By InkBamboo
@@ -36,16 +26,17 @@ object kafkatoObjectDemo extends  App {
   val senv = StreamExecutionEnvironment.getExecutionEnvironment
 
   val props = new Properties()
-  props.setProperty("bootstrap.servers", "192.168.183.133:9092")
+  props.setProperty("bootstrap.servers", "192.168.137.131:9092")
   //只有kafka0.8需要该配置项
   //props.setProperty("zookeeper.connect","192.168.183.133:2181")
   props.setProperty("group.id","test")
 
   //自定义对kafka中的数据进行处理，转换为object对象
-  val kafkaschema = new FlinkKafkaConsumer010[wordcount]("wiki_test",new wordcountsxxchema,props).setStartFromLatest()
+  val kafkaschema = new FlinkKafkaConsumer010[wordcount]("realTimeDataHouse",new wordcountsxxchema,props).setStartFromLatest()
 
  val kafkastream =  senv.addSource(kafkaschema)
 
+  senv.enableCheckpointing(10000,CheckpointingMode.EXACTLY_ONCE)
   //此处添加乱序数据中对延迟数据容忍固定时间的水位线
   kafkastream.assignTimestampsAndWatermarks(new AssignerWithPeriodicWatermarks[wordcount]{
     private val maxOutOfOrderness = 1000

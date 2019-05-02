@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import java.sql.{Connection, DriverManager}
 import java.util.Properties
@@ -48,7 +48,7 @@ object streamKafaMysqlDemo {
       * kafka配置信息
       */
     val prop = new Properties()
-    prop.setProperty("bootstrap.servers", "192.168.183.133:9092")
+    prop.setProperty("bootstrap.servers", "192.168.137.131:9092")
     //prop.setProperty("zookeeper.connect", "192.168.183.133:2181")
     prop.setProperty("group.id", "test")
     //收集kafka中的数据

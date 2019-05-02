@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import java.io.File
 import java.sql.Timestamp
@@ -31,7 +31,7 @@ object HotItems2 {
 
   def main(args: Array[String]): Unit = {
 
-    val env = StreamExecutionEnvironment.createLocalEnvironment()
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
 
     // 告诉系统按照 EventTime 处理
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)

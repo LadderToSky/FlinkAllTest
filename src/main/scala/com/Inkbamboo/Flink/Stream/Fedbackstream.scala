@@ -1,4 +1,4 @@
-package com.Inkbamboo.Flink.stream
+package com.Inkbamboo.Flink.Stream
 
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.datastream.DataStreamUtils
@@ -8,8 +8,11 @@ import scala.collection.JavaConverters._
 
 /**
   * 递归迭代算子
+  * 测试通过
   */
-object Fedbackstream extends App {
+object Fedbackstream {
+
+  def main(args: Array[String]): Unit = {
 
     val streamenv = StreamExecutionEnvironment.getExecutionEnvironment
   streamenv.setParallelism(1)
@@ -36,4 +39,7 @@ object Fedbackstream extends App {
 
   myoutput.foreach(println(_))
   streamenv.execute("FedBackstream")
+
+
+  }
 }

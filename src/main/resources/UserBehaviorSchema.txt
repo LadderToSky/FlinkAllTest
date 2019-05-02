@@ -1,0 +1,6 @@
+列名称 说明
+user_id     用户ID 整数类型，加密后的用户ID
+pro_id      商品ID 整数类型，加密后的商品ID
+pro_type_id 商品类目ID 整数类型，加密后的商品所属类目ID
+act_type    行为类型 字符串，枚举类型，包括('pv', 'buy', 'cart', 'fav')
+timestamp   时间戳 行为发生的时间戳，单位秒
