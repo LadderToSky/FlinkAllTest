@@ -2,16 +2,17 @@ package flinkSrc
 
 import java.io.File
 
-import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.api.java.io.PojoCsvInputFormat
+import org.apache.flink.api.java.tuple.Tuple
 import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TypeExtractor}
-import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.{OutputTag, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.windowing.assigners.{EventTimeSessionWindows, SessionWindowTimeGapExtractor}
+import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.util.Collector
 
 /**
   * Created By InkBamboo
@@ -49,6 +50,7 @@ object DataStreamTest extends App {
 
   //val dataset = denv.createInput(csvinput)
 
+
   /************************************************************************************
     * Stream operator测试
     ***********************************************************************************/
@@ -57,7 +59,8 @@ object DataStreamTest extends App {
     //时间是秒级别的转换为毫秒级别
     .assignAscendingTimestamps(x=>x.timestamp*1000)
     //根据用户动作分组
-    .keyBy(x=>x.behavior)
+   .map(x=>(x.userId,x.itemId,1))
+    .keyBy(0,1)
 
     /*************************************************************************************
       * [[org.apache.flink.streaming.api.scala.KeyedStream]]
@@ -70,7 +73,7 @@ object DataStreamTest extends App {
     //1.滑动窗口 sliding time windows
     //.timeWindow(Time.minutes(30),Time.minutes(5))
     //2.滚动窗口 tumbling time windows
-    //.timeWindow(Time.minutes(30))
+    .timeWindow(Time.minutes(30))
     //3.会话窗口  session time window
     // 1).设置固定大小的session窗口
     //.window(EventTimeSessionWindows.withGap(Time.minutes(10)))
@@ -116,7 +119,7 @@ object DataStreamTest extends App {
       * **************************************************************************************
       */
     //返回值类型为DataStream
-    .reduce((x,y)=>new UserBehavior3(x.userId,x.itemId,y.categoryId,y.behavior,y.timestamp))
+    //.reduce((x,y)=>new UserBehavior3(x.userId,x.itemId,y.categoryId,y.behavior,y.timestamp))
    //获取底层java DataStream对象
      //.javaStream
    //返回TypeInformation类型的信息
@@ -124,22 +127,55 @@ object DataStreamTest extends App {
   //获取执行参数对象，并用于获取指定的参数配置或者设置配置参数
    //  .executionConfig
   //设置最大并行度，设置了job动态缩放的上限
-     .setMaxParallelism(200)
+   //  .setMaxParallelism(200)
    //获得算子执行的最小资源量，包括cpu，内存等 ResourceSpec{cpuCores=0.0, heapMemoryInMB=0, directMemoryInMB=0, nativeMemoryInMB=0, stateSizeInMB=0}
      //.minResources
   //返回此操作的首选资源  ResourceSpec{cpuCores=0.0, heapMemoryInMB=0, directMemoryInMB=0, nativeMemoryInMB=0, stateSizeInMB=0}
      //.preferredResources
    //设置该datastream的名字，用于监控界面以及日志中使用
-     .name("datastreamTest")
+   //  .name("datastreamTest")
    //为当前的operator设置id，该id在该job中必须唯一，主要使用在开启checkpoint的情况下用于job的恢复。
-     .uid("reduce")
-   //没懂这个是什么作用？？？
-     .getSideOutput[UserBehavior3](OutputTag[UserBehavior3]("testData"))
+   //  .uid("reduce")
+
+//使用自定义ProcessWindowFunction并将部分数据写入到测输出流中,此处的processFunction方法的传入参数必须参照上一个operator产出的数据类型
+     .process(new myprocessFuntion)
+   //《《《《《《《《《《《《获取到上面定义的侧输出数据，根据id，具体类型根据使用调整,边缘输出的id定义在:myprocessFuntion中
+    .getSideOutput[UserBehavior3](OutputTag[UserBehavior3]("side-output"))
+
+   //聚合函数的使用：统计根据userid和itermid分组的量
+  /* .aggregate(new AggregateFunction[(Long,Long,Int),(Long,Long,Int),(Long,Long,Int)] {
+   override def createAccumulator(): (Long, Long, Int) = (0,0,0)
+
+   override def add(value: (Long, Long, Int), accumulator: (Long, Long, Int)): (Long, Long, Int) = (value._1,value._2,value._3+accumulator._3)
+
+   override def getResult(accumulator: (Long, Long, Int)): (Long, Long, Int) = {
+     accumulator
+   }
+
+   override def merge(a: (Long, Long, Int), b: (Long, Long, Int)): (Long, Long, Int) = (a._1,a._2,a._3+b._3)
+ })*/
 
   //dres.print()
 
    println(dres)
+
+  //《《《《《《《《《《《获取边缘输出的结果集
+  datastream.getSideOutput(new OutputTag[UserBehavior3]("side-output"))
   senv.execute("DataStreamTest")
+
+}
+
+//slide output  侧输出流 操作将数据流中的部分数据导入到侧输出流中
+class myprocessFuntion extends ProcessWindowFunction[Tuple3[Long,Long,Int],Tuple3[Long,Long,Int],Tuple,TimeWindow]{
+  override def process(key: Tuple, context: Context, elements: Iterable[(Long, Long, Int)], out: Collector[(Long, Long, Int)]): Unit = {
+    for(ele<-elements){
+      out.collect(ele)
+      if(key.getField(0).asInstanceOf[Int]%10==5){
+        // 《《《《《《《《《《《《 定义边缘输出的id
+        context.output(new OutputTag("side-output"),ele)
+      }
+    }
+  }
 }
 
 //pojo
@@ -160,3 +196,6 @@ class UserBehavior3(
     ""+userId+"  "+itemId+" "+categoryId+" "+behavior+" "+timestamp+"->>>>"
   }
 }
+
+
+
