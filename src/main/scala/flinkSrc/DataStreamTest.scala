@@ -140,7 +140,7 @@ object DataStreamTest extends App {
 //使用自定义ProcessWindowFunction并将部分数据写入到测输出流中,此处的processFunction方法的传入参数必须参照上一个operator产出的数据类型
      .process(new myprocessFuntion)
    //《《《《《《《《《《《《获取到上面定义的侧输出数据，根据id，具体类型根据使用调整,边缘输出的id定义在:myprocessFuntion中
-    .getSideOutput[UserBehavior3](OutputTag[UserBehavior3]("side-output"))
+    //.getSideOutput[(Long, Long, Int)](OutputTag[(Long, Long, Int)]("side-output"))
 
    //聚合函数的使用：统计根据userid和itermid分组的量
   /* .aggregate(new AggregateFunction[(Long,Long,Int),(Long,Long,Int),(Long,Long,Int)] {
@@ -157,10 +157,11 @@ object DataStreamTest extends App {
 
   //dres.print()
 
-   println(dres)
-
+  println("------------------------")
   //《《《《《《《《《《《获取边缘输出的结果集
-  datastream.getSideOutput(new OutputTag[UserBehavior3]("side-output"))
+  val sideoutput = dres.getSideOutput(new OutputTag[(Long, Long, Int)]("side-output"))
+
+  sideoutput.print()
   senv.execute("DataStreamTest")
 
 }
@@ -170,9 +171,9 @@ class myprocessFuntion extends ProcessWindowFunction[Tuple3[Long,Long,Int],Tuple
   override def process(key: Tuple, context: Context, elements: Iterable[(Long, Long, Int)], out: Collector[(Long, Long, Int)]): Unit = {
     for(ele<-elements){
       out.collect(ele)
-      if(key.getField(0).asInstanceOf[Int]%10==5){
+      if(key.getField(0).asInstanceOf[Long]%10==5){
         // 《《《《《《《《《《《《 定义边缘输出的id
-        context.output(new OutputTag("side-output"),ele)
+        context.output(new OutputTag[(Long, Long, Int)]("side-output"),ele)
       }
     }
   }
