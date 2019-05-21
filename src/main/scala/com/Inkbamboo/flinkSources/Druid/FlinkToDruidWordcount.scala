@@ -32,10 +32,13 @@ import org.scala_tools.time.Imports.Period
   * 测试通过数据已经写进到druid中
   *
   * ***需要详细解析内部参数的配置
+  * tranquality参数配置详解地址：https://github.com/druid-io/tranquility/blob/master/docs/configuration.md
   *
   *
   * 1.分钟级集合操作，不再该分钟内的数据被丢弃，并且如果创建task时，数据时间已经不再该分钟级别内，task不创建并且数据被丢弃。
-  * 2. DruidBeams.builder中构建的时间，不知道作用是什么？？
+  * @@@@@@2.对于被丢弃的数据，可以采用离线导入的方式将丢弃的数据导入到指定的datasource的指定时间区间中.需要考虑怎么获取被丢弃数据
+  *       获取到被丢弃的数据：BeamSink内部其实是一个自定义的sink，并且可以得到被丢弃的数据，可以自定义一个BeamSink来讲被丢弃的数据回捞回来
+  * 3. DruidBeams.builder中构建的时间，不知道作用是什么？？
   */
 object FlinkToDruidWordcount extends App {
 
