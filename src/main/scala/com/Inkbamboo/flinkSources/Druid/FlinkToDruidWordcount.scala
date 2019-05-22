@@ -65,7 +65,13 @@ object FlinkToDruidWordcount extends App {
     .sum("count")
 */
   val zkConnect = "192.168.183.133:2181"
-  val sink = new BeamSink[wordcount2](new SimpleEventBeamFactory2(zkConnect))
+  /**
+    * 模仿BeamSink实现RichSinkFunction,可以自己控制对于被丢弃的数据的存储，从而做到将被丢弃的数据重新分发到druid对应的时间片中。
+    * 上面描述的类似于druid tranquality 提供的java API实现的类似。
+    * 细节见：本工程com.Inkbamboo.flinkSources.Druid.DataToDruidDemo
+    */
+    //第二个参数：true  当有数据被丢弃是抛出异常，false 不报异常
+  val sink = new BeamSink[wordcount2](new SimpleEventBeamFactory2(zkConnect),true)
 
   println("------------------------------------------")
   res.print()
