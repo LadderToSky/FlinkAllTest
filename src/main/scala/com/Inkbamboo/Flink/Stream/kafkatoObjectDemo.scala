@@ -1,8 +1,10 @@
 package com.Inkbamboo.Flink.Stream
 
 import java.util.Properties
-import net.sf.json.{JSONObject}
-import org.apache.flink.api.common.serialization.{AbstractDeserializationSchema}
+
+import net.sf.json.JSONObject
+import org.apache.flink.api.common.restartstrategy.RestartStrategies
+import org.apache.flink.api.common.serialization.AbstractDeserializationSchema
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
@@ -25,6 +27,14 @@ object kafkatoObjectDemo extends  App {
 
   val senv = StreamExecutionEnvironment.getExecutionEnvironment
 
+  /**设置flinkjob的重启策略
+    *有三种重启类型：
+    * fixedDelayRestart  设置尝试重试的次数以及重试之间的时间间隔
+    * noRestart  不重启
+    * fallBackRestart  使用群集定义的重新启动策略。这对于启用检查点的流式传输程序很有帮助
+    *
+    */
+  senv.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 100))
   val props = new Properties()
   props.setProperty("bootstrap.servers", "192.168.137.131:9092")
   //只有kafka0.8需要该配置项
@@ -67,7 +77,9 @@ object kafkatoObjectDemo extends  App {
 /**
   * 自定义实现 kafka需要的序列化类，来指定生成kafka中数据对应的schema数据
   *
-  * 改为java代码可以直接使用(wordcount)JSONObject.toBean方法转换成wordcount类型
+  * -===改为java代码可以直接使用(wordcount)JSONObject.toBean方法转换成wordcount类型
+  *
+  * 上面问题解决方法：wordcount不能使用case class定义，需要使用class定义即可
   */
 class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
 
@@ -81,6 +93,7 @@ class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
     }
     val word = wordcount(json.getString("word"),json.getInt("time"),json.getInt("count"))
    //val res =  JSONObject.toBean(json,wordcount.getClass).asInstanceOf[wordcount]
+   //val res:wordcount =  JSONObject.toBean(json,classOf[wordcount])
     //res
     word
   }
