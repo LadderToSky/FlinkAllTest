@@ -74,6 +74,9 @@ object DataStreamTest extends App {
     //.timeWindow(Time.minutes(30),Time.minutes(5))
     //2.滚动窗口 tumbling time windows
     .timeWindow(Time.minutes(30))
+   .allowedLateness(Time.hours(1))
+   //**************将晚到的数据单独保存到一个测输出中,用于后续数据修复使用
+   .sideOutputLateData(new OutputTag[(Long, Long, Int)]("lateDataSave"))
     //3.会话窗口  session time window
     // 1).设置固定大小的session窗口
     //.window(EventTimeSessionWindows.withGap(Time.minutes(10)))
