@@ -1,7 +1,7 @@
-package com.InkBamboo.Druid;
+package com.Inkbamboo.Flink;
 
-import com.InkBamboo.Test.wordcount;
-import com.fasterxml.jackson.databind.JsonSerializable;
+import com.Inkbamboo.Flink.sink.DruidSink;
+import com.Inkbamboo.dao.wordcount2;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -29,14 +29,14 @@ public class FlinkToDruid {
 
         StreamExecutionEnvironment senv = StreamExecutionEnvironment.getExecutionEnvironment();
         //senv.setParallelism(1);
-        ArrayList<wordcount> arr = new ArrayList();
+        ArrayList<wordcount2> arr = new ArrayList();
         for(int i=100;i<200;i++){
-            arr.add(new wordcount("c"+i,i*2,"bcd"+i,"edf"+i));
+            arr.add(new wordcount2("c"+i,i*2,"bcd"+i,"edf"+i));
         }
 
-        DataStream ds = senv.fromCollection(arr).map(new MapFunction<wordcount, wordcount>() {
+        DataStream ds = senv.fromCollection(arr).map(new MapFunction<wordcount2, wordcount2>() {
             @Override
-            public wordcount map(wordcount value) throws Exception {
+            public wordcount2 map(wordcount2 value) throws Exception {
                 return value;
             }
         });

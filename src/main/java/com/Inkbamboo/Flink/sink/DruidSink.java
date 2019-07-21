@@ -1,6 +1,6 @@
-package com.InkBamboo.Druid;
+package com.Inkbamboo.Flink.sink;
 
-import com.InkBamboo.Test.wordcount;
+import com.Inkbamboo.dao.wordcount2;
 import com.google.common.collect.ImmutableMap;
 import com.metamx.common.logger.Logger;
 import com.metamx.tranquility.config.DataSourceConfig;
@@ -15,7 +15,6 @@ import org.joda.time.DateTime;
 import scala.runtime.BoxedUnit;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -37,7 +36,7 @@ public class DruidSink implements SinkFunction{
     public void invoke(Object value, Context context) throws Exception {
 
         sender.start();
-        wordcount word = (wordcount)value;
+        wordcount2 word = (wordcount2)value;
 
         try {
             // Send 10000 objects
@@ -46,7 +45,7 @@ public class DruidSink implements SinkFunction{
                 // Build a sample event to send; make sure we use a current date
                 final Map<String, Object> obj = ImmutableMap.<String, Object>of(
                         "timestamp",new DateTime().toString(),
-                        "ColTwo", ((wordcount) value).getColTwo()
+                        "ColTwo", ((wordcount2) value).getColTwo()
                 );
                 // Asynchronously send event to Druid:
                 sender.send(obj).addEventListener(
