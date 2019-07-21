@@ -1,10 +1,8 @@
 package com.Inkbamboo.Flink.Stream
 
 import java.util.Properties
-
-import net.sf.json.JSONObject
-import org.apache.flink.api.common.restartstrategy.RestartStrategies
-import org.apache.flink.api.common.serialization.AbstractDeserializationSchema
+import net.sf.json.{JSONObject}
+import org.apache.flink.api.common.serialization.{AbstractDeserializationSchema}
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
@@ -27,14 +25,6 @@ object kafkatoObjectDemo extends  App {
 
   val senv = StreamExecutionEnvironment.getExecutionEnvironment
 
-  /**设置flinkjob的重启策略
-    *有三种重启类型：
-    * fixedDelayRestart  设置尝试重试的次数以及重试之间的时间间隔
-    * noRestart  不重启
-    * fallBackRestart  使用群集定义的重新启动策略。这对于启用检查点的流式传输程序很有帮助
-    *
-    */
-  senv.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 100))
   val props = new Properties()
   props.setProperty("bootstrap.servers", "192.168.137.131:9092")
   //只有kafka0.8需要该配置项
@@ -44,7 +34,7 @@ object kafkatoObjectDemo extends  App {
   //自定义对kafka中的数据进行处理，转换为object对象
   val kafkaschema = new FlinkKafkaConsumer010[wordcount]("realTimeDataHouse",new wordcountsxxchema,props).setStartFromLatest()
 
- val kafkastream =  senv.addSource(kafkaschema)
+  val kafkastream =  senv.addSource(kafkaschema)
 
   senv.enableCheckpointing(10000,CheckpointingMode.EXACTLY_ONCE)
   //此处添加乱序数据中对延迟数据容忍固定时间的水位线
@@ -53,11 +43,11 @@ object kafkatoObjectDemo extends  App {
     private var currentTimstamp:Long=0
     override def getCurrentWatermark: Watermark = {
       //返回新的watermark，时间为当前数据的最新时间-允许乱序的最大时间
-       new Watermark(currentTimstamp-maxOutOfOrderness)
+      new Watermark(currentTimstamp-maxOutOfOrderness)
     }
 
     override def extractTimestamp(element: wordcount, previousElementTimestamp: Long): Long = {
-        val times = element.time
+      val times = element.time
       currentTimstamp = Math.max(times,currentTimstamp)
       times
     }
@@ -77,9 +67,7 @@ object kafkatoObjectDemo extends  App {
 /**
   * 自定义实现 kafka需要的序列化类，来指定生成kafka中数据对应的schema数据
   *
-  * -===改为java代码可以直接使用(wordcount)JSONObject.toBean方法转换成wordcount类型
-  *
-  * 上面问题解决方法：wordcount不能使用case class定义，需要使用class定义即可
+  * 改为java代码可以直接使用(wordcount)JSONObject.toBean方法转换成wordcount类型
   */
 class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
 
@@ -92,15 +80,9 @@ class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
       case e=>e.printStackTrace()
     }
     val word = new wordcount(json.getString("word"),json.getInt("time"),json.getInt("count"))
-   //val res =  JSONObject.toBean(json,wordcount.getClass).asInstanceOf[wordcount]
-   //val res:wordcount =  JSONObject.toBean(json,classOf[wordcount])
+    //val res =  JSONObject.toBean(json,wordcount.getClass).asInstanceOf[wordcount]
     //res
     word
-  }
-
-  //将数据类型转换为flink支持的数据类型
-  override def getProducedType: TypeInformation[wordcount] = {
-    TypeInformation[wordcount]
   }
 }
 
