@@ -19,7 +19,7 @@ import scala.util.Random
   *
   * watermark水位线测试
   *
-  *！！！！！！例子有问题，正常来说超过3.5s,的数据应该会被丢弃，按时例子中并没有
+  *！！！！！！例子有问题，正常来说超过3.5s,的数据应该会被丢弃，但是例子中并没有
   *     上述说法存在问题：
   *           watermark官网给出的文档中分为很多种，只有其中的 Assigners allowing a fixed amount of lateness  是支持数据延迟到达的watermark
   *           Flink provides the BoundedOutOfOrdernessTimestampExtractor which takes as an argument the maxOutOfOrderness, i.e. the maximum amount of time an element is allowed to be late before being ignored when computing the final result for the given window
@@ -100,5 +100,9 @@ object watermarkDemo extends  App {
   senv.execute("watermarkDemo")
 }
 
-case class wordcount(word:String,time:Long,count:Int)
+class wordcount(var word:String,var time:Long,var count:Int){
+  def this(){
+    this(null,0,0)
+  }
+}
 

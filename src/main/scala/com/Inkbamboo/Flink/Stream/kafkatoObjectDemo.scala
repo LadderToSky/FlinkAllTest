@@ -91,11 +91,16 @@ class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
     catch {
       case e=>e.printStackTrace()
     }
-    val word = wordcount(json.getString("word"),json.getInt("time"),json.getInt("count"))
+    val word = new wordcount(json.getString("word"),json.getInt("time"),json.getInt("count"))
    //val res =  JSONObject.toBean(json,wordcount.getClass).asInstanceOf[wordcount]
    //val res:wordcount =  JSONObject.toBean(json,classOf[wordcount])
     //res
     word
+  }
+
+  //将数据类型转换为flink支持的数据类型
+  override def getProducedType: TypeInformation[wordcount] = {
+    TypeInformation[wordcount]
   }
 }
 
