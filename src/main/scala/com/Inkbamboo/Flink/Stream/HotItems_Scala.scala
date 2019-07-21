@@ -27,7 +27,7 @@ import scala.collection.JavaConversions._
   * 如何计算实时热门商品以及TopN实现
   * https://github.com/wuchong/my-flink-project/blob/master/src/main/java/myflink/HotItems.java
   */
-object HotItems2 {
+object HotItems2_Scala {
 
   def main(args: Array[String]): Unit = {
 
@@ -39,7 +39,7 @@ object HotItems2 {
     //env.setMaxParallelism(1)
 
     // UserBehavior.csv 的本地文件路径, 在 resources 目录下
-    val fileurl = HotItems2.getClass.getClassLoader.getResource("UserBehavior.csv")
+    val fileurl = HotItems2_Scala.getClass.getClassLoader.getResource("UserBehavior.csv")
     val filepath = Path.fromLocalFile(new File(fileurl.toURI))
 
     // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
