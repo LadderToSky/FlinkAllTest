@@ -125,6 +125,7 @@ object streamKafaMysqlDemo {
       }
     }
   }
+
 }
 
 

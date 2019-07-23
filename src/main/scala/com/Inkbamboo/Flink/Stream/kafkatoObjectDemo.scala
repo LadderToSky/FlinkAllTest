@@ -62,7 +62,6 @@ object kafkatoObjectDemo extends  App {
 
 }
 
-//case class wordcount(word:String,time:Long,count:Int)
 
 /**
   * 自定义实现 kafka需要的序列化类，来指定生成kafka中数据对应的schema数据
@@ -86,19 +85,3 @@ class wordcountsxxchema extends AbstractDeserializationSchema[wordcount]{
   }
 }
 
-/*class wordcountSchema extends DeserializationSchema[wordcount]{
-  override def deserialize(message: Array[Byte]): wordcount = {
-
-    val fstconf = FSTConfiguration.getDefaultConfiguration
-    fstconf.asObject(message).tostring
-  }
-
-  override def isEndOfStream(nextElement: wordcount): Boolean = {
-
-    false
-  }
-
-  override def getProducedType: TypeInformation[wordcount] = {
-    TypeInformation.of(wordcount.getClass)
-  }
-}*/
