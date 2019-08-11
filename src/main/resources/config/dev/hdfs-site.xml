@@ -17,18 +17,18 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-<property>   
-<!--存储hdfs的元数据，配置多个目录可存储多份-->
-<name>dfs.name.dir</name>   
-<value>/mnt/hadoopdata/hdfs_metadata</value>   
-</property>  
-<!--确定将HDFS文件系统的数据保存在什么目录下--> 
-<property>   
-<name>dfs.data.dir</name>   
-<value>/mnt/hadoopdata/hdfs_data</value>   
-</property>   
-<property>   
-<name>dfs.replication</name>   
-<value>1</value>   
-</property>
+    <property>
+        <!--存储hdfs的元数据，配置多个目录可存储多份-->
+        <name>dfs.name.dir</name>
+        <value>/Volumes/MacOsExtend/.hadoopclusterDatas/hdfs_metadata</value>
+    </property>
+    <!--确定将HDFS文件系统的数据保存在什么目录下-->
+    <property>
+        <name>dfs.data.dir</name>
+        <value>/Volumes/MacOsExtend/.hadoopclusterDatas/hdfs_data</value>
+    </property>
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
 </configuration>

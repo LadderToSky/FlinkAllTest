@@ -48,7 +48,7 @@
     }
   ],
   "properties": {
-    "zookeeper.connect": "192.168.183.133:2181",
+    "zookeeper.connect": "192.168.119.129:2181",
     "druid.selectors.indexing.serviceName": "druid/overlord",
     "druid.discovery.curator.path": "/druid/discovery",
     "druidBeam.taskLocator": "overlord",

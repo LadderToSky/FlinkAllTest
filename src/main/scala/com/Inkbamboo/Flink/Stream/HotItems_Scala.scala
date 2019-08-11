@@ -5,6 +5,7 @@ import java.sql.Timestamp
 import java.util
 import java.util.Comparator
 
+import com.Inkbamboo.beans.UserBehavior
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
 import org.apache.flink.api.java.io.PojoCsvInputFormat
@@ -20,6 +21,7 @@ import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 import org.apache.flink.api.scala._
+
 import scala.collection.JavaConversions._
 
 /**scala实现
@@ -43,12 +45,12 @@ object HotItems2_Scala {
     val filepath = Path.fromLocalFile(new File(fileurl.toURI))
 
     // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
-    val pojoType =TypeExtractor.createTypeInfo(classOf[UserBehavior2]).asInstanceOf[PojoTypeInfo[UserBehavior2]]
+    val pojoType =TypeExtractor.createTypeInfo(classOf[UserBehavior]).asInstanceOf[PojoTypeInfo[UserBehavior]]
     // 由于 Java 反射抽取出的字段顺序是不确定的，需要显式指定下文件中字段的顺序
     val fieldOrder = Array[String]("userId", "itemId", "categoryId", "behavior", "timestamp")
 
     // 创建 PojoCsvInputFormat
-    val csvInput = new PojoCsvInputFormat[UserBehavior2](filepath,pojoType,fieldOrder)//.asInstanceOf[PojoTypeInfo[UserBehavior2]]
+    val csvInput = new PojoCsvInputFormat[UserBehavior](filepath,pojoType,fieldOrder)//.asInstanceOf[PojoTypeInfo[UserBehavior]]
 
     env
       // 创建数据源，得到 UserBehavior 类型的 DataStream
@@ -72,33 +74,6 @@ object HotItems2_Scala {
 
 }
 
-/**
-  *定义为pojo类
-  * pojo类定义：
-  * 个公共类，并且是独立的(不是一个非静态的内部类)
-  * 有一个公共的无参数构造函数
-  * 所有字段要么是公共的，要么有公共的getter和setter
-  *
-  * @param userId     用户ID
-  * @param itemId     商品ID
-  * @param categoryId 商品类目ID
-  * @param behavior   用户行为, 包括("pv", "buy", "cart", "fav")
-  * @param timestamp   行为发生的时间戳，单位秒
-  */
- class UserBehavior2(
- var userId: Long,
-// 用户ID
-var itemId: Long, // 商品ID
-var categoryId: Int,// 商品类目ID
-var behavior: String , // 用户行为, 包括("pv", "buy", "cart", "fav")
-var timestamp: Long// 行为发生的时间戳，单位
-){
-  //此处主要用于flink将该类识别为pojo类
-  ////无参构造器
-  def this(){
-    this(0,0,0,null,0)
-  }
-}
 
 /** 商品点击量(窗口操作的输出类型) */
 object ItemViewCount2 {
@@ -128,11 +103,11 @@ class ItemViewCount2 {
   * COUNT 统计的聚合函数实现，每出现一条记录加一
   * createAccumulator 对一个窗口内的一个key只进行一次初始化
   */
-class CountAgg2 extends AggregateFunction[UserBehavior2,Long,Long]{
+class CountAgg2 extends AggregateFunction[UserBehavior,Long,Long]{
   override def createAccumulator() = 0L
 
   //根据输入数据对累加器做操作
-  override def add(value: UserBehavior2, accumulator: Long): Long = accumulator+1
+  override def add(value: UserBehavior, accumulator: Long): Long = accumulator+1
 
   //返回最终计算的结果
   override def getResult(accumulator: Long): Long = accumulator

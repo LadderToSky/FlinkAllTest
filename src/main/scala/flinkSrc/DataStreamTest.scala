@@ -2,6 +2,7 @@ package flinkSrc
 
 import java.io.File
 
+import com.Inkbamboo.beans.UserBehavior
 import org.apache.flink.api.java.io.PojoCsvInputFormat
 import org.apache.flink.api.java.tuple.Tuple
 import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TypeExtractor}
@@ -39,9 +40,9 @@ object DataStreamTest extends App {
   val filepath = Path.fromLocalFile(new File(fileurl.toURI))
 
   //构建数据需要的typeinfomation信息
-  val pojoType = TypeExtractor.createTypeInfo(classOf[UserBehavior3]).asInstanceOf[PojoTypeInfo[UserBehavior3]]
+  val pojoType = TypeExtractor.createTypeInfo(classOf[UserBehavior]).asInstanceOf[PojoTypeInfo[UserBehavior]]
   val fieldOrder = Array[String]("userId", "itemId", "categoryId", "behavior", "timestamp")
-  val csvinput = new PojoCsvInputFormat[UserBehavior3](filepath,pojoType,fieldOrder) // .isSkippingFirstLineAsHeader  设置跳过表头(表头是类名)
+  val csvinput = new PojoCsvInputFormat[UserBehavior](filepath,pojoType,fieldOrder) // .isSkippingFirstLineAsHeader  设置跳过表头(表头是类名)
   /**
     * 构建数据源可以从下往上推。
     * 从createInput往上推需要什么参数，之后构建需要的参数
@@ -81,8 +82,8 @@ object DataStreamTest extends App {
     // 1).设置固定大小的session窗口
     //.window(EventTimeSessionWindows.withGap(Time.minutes(10)))
     // 2).动态设置session窗口  sessionWindowTimeGapExtractor用于从数据中提取时间字段
-    /*.window(EventTimeSessionWindows.withDynamicGap(new SessionWindowTimeGapExtractor[UserBehavior3](){
-    override def extract(element: UserBehavior3): Long = {
+    /*.window(EventTimeSessionWindows.withDynamicGap(new SessionWindowTimeGapExtractor[UserBehavior](){
+    override def extract(element: UserBehavior): Long = {
       element.timestamp*1000
     }
   }))*/
@@ -94,10 +95,10 @@ object DataStreamTest extends App {
     //.countWindow(100)
     //.countWindow(100,20)
     //对每个key的分组进行reduce处理  下面两个用法基本一致
-    //.reduce((x,y)=>new UserBehavior3(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2))
-    /*.reduce(new ReduceFunction[UserBehavior3] {
-      override def reduce(x: UserBehavior3, y: UserBehavior3): UserBehavior3 = {
-        new UserBehavior3(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2)
+    //.reduce((x,y)=>new UserBehavior(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2))
+    /*.reduce(new ReduceFunction[UserBehavior] {
+      override def reduce(x: UserBehavior, y: UserBehavior): UserBehavior = {
+        new UserBehavior(x.userId,y.itemId,y.categoryId,x.behavior,(x.timestamp+y.timestamp)/2)
       }
       })*/
     //一个窗口对数据根据给定的字段，确定最大值max，最小值min，对指定字段求和，根据指定字段.
@@ -109,10 +110,10 @@ object DataStreamTest extends App {
     // 状态函数  ?????????????
     //--------------------------------------------------------------
     //创建一个新的DataStream，其中只包含满足给定有状态筛选器谓词的元素。要使用状态分区，必须使用. keyby(..)定义一个键，
-    // 在这种情况下，每个键将保留一个独立的状态。 【注意】，用户状态对象UserBehavior3需要是可序列化的
+    // 在这种情况下，每个键将保留一个独立的状态。 【注意】，用户状态对象UserBehavior需要是可序列化的
     //第二个参数，具体作用不明,状态判定的函数???????。
-    //.filterWithState[UserBehavior3]((x,y)=>(x.timestamp%10>5,y))
-    //.mapWithState[Long,UserBehavior3]((x,y)=>(x.timestamp*10000,y))
+    //.filterWithState[UserBehavior]((x,y)=>(x.timestamp%10>5,y))
+    //.mapWithState[Long,UserBehavior]((x,y)=>(x.timestamp*10000,y))
     //.flatMapWithState()
     //将键控流发布为可查询的ValueState实例。返回类型QueryableStateStream
     //.asQueryableState()
@@ -122,7 +123,7 @@ object DataStreamTest extends App {
       * **************************************************************************************
       */
     //返回值类型为DataStream
-    //.reduce((x,y)=>new UserBehavior3(x.userId,x.itemId,y.categoryId,y.behavior,y.timestamp))
+    //.reduce((x,y)=>new UserBehavior(x.userId,x.itemId,y.categoryId,y.behavior,y.timestamp))
    //获取底层java DataStream对象
      //.javaStream
    //返回TypeInformation类型的信息
@@ -183,23 +184,7 @@ class myprocessFuntion extends ProcessWindowFunction[Tuple3[Long,Long,Int],Tuple
 }
 
 //pojo
-class UserBehavior3(
-                     var userId: Long,
-                     // 用户ID
-                     var itemId: Long, // 商品ID
-                     var categoryId: Int,// 商品类目ID
-                     var behavior: String , // 用户行为, 包括("pv", "buy", "cart", "fav")
-                     var timestamp: Long// 行为发生的时间戳，单位
-                   ){
-  //无参构造器
-  def this(){
-    this(0,0,0,null,0)
-  }
 
-  override def toString: String = {
-    ""+userId+"  "+itemId+" "+categoryId+" "+behavior+" "+timestamp+"->>>>"
-  }
-}
 
 
 

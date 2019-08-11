@@ -20,14 +20,14 @@
 	<!-- 指定hdfs的nameservice为ns1 -->
 	<property>
 		<name>fs.defaultFS</name>
-		<value>hdfs://hadoop1:9000</value>
+		<value>hdfs://localhost:9000</value>
 	</property>
-        <property>  
-  
-        	<name>dfs.replication</name>  
-  
-        	<value>1</value>  
-  
-	</property>  
+	<property>
+
+		<name>dfs.replication</name>
+
+		<value>1</value>
+
+	</property>
 
 </configuration>

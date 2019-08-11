@@ -64,28 +64,28 @@ public class HotItems {
         URL fileUrl = HotItems.class.getClassLoader().getResource("UserBehavior.csv");
         Path filePath = Path.fromLocalFile(new File(fileUrl.toURI()));
         // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
-        PojoTypeInfo<UserBehavior> pojoType = (PojoTypeInfo<UserBehavior>) TypeExtractor.createTypeInfo(UserBehavior.class);
+        PojoTypeInfo<UserBehavior2> pojoType = (PojoTypeInfo<UserBehavior2>) TypeExtractor.createTypeInfo(UserBehavior2.class);
         // 由于 Java 反射抽取出的字段顺序是不确定的，需要显式指定下文件中字段的顺序
         String[] fieldOrder = new String[]{"userId", "itemId", "categoryId", "behavior", "timestamp"};
         // 创建 PojoCsvInputFormat
-        PojoCsvInputFormat<UserBehavior> csvInput = new PojoCsvInputFormat<>(filePath, pojoType, fieldOrder);
+        PojoCsvInputFormat<UserBehavior2> csvInput = new PojoCsvInputFormat<>(filePath, pojoType, fieldOrder);
 
 
         env
                 // 创建数据源，得到 UserBehavior 类型的 DataStream
                 .createInput(csvInput, pojoType)
                 // 抽取出时间和生成 watermark
-                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<UserBehavior>() {
+                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<UserBehavior2>() {
                     @Override
-                    public long extractAscendingTimestamp(UserBehavior userBehavior) {
+                    public long extractAscendingTimestamp(UserBehavior2 userBehavior) {
                         // 原始数据单位秒，将其转成毫秒
                         return userBehavior.timestamp * 1000;
                     }
                 })
                 // 过滤出只有点击的数据
-                .filter(new FilterFunction<UserBehavior>() {
+                .filter(new FilterFunction<UserBehavior2>() {
                     @Override
-                    public boolean filter(UserBehavior userBehavior) throws Exception {
+                    public boolean filter(UserBehavior2 userBehavior) throws Exception {
                         // 过滤出只有点击的数据
                         return userBehavior.behavior.equals("pv");
                     }
@@ -188,7 +188,7 @@ public class HotItems {
     }
 
     /** COUNT 统计的聚合函数实现，每出现一条记录加一 */
-    public static class CountAgg implements AggregateFunction<UserBehavior, Long, Long> {
+    public static class CountAgg implements AggregateFunction<UserBehavior2, Long, Long> {
 
         @Override
         public Long createAccumulator() {
@@ -196,7 +196,7 @@ public class HotItems {
         }
 
         @Override
-        public Long add(UserBehavior userBehavior, Long acc) {
+        public Long add(UserBehavior2 userBehavior, Long acc) {
             return acc + 1;
         }
 
@@ -227,7 +227,7 @@ public class HotItems {
     }
 
     /** 用户行为数据结构 **/
-    public static class UserBehavior {
+    public static class UserBehavior2 {
         public long userId;         // 用户ID
         public long itemId;         // 商品ID
         public int categoryId;      // 商品类目ID
