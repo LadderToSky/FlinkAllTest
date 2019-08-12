@@ -1,12 +1,12 @@
 package com.Inkbamboo.Flink.Table.batch
 
+import com.Inkbamboo.beans.TableSourceBean
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.core.fs.FileSystem.WriteMode
-import org.apache.flink.table.api.{Table, TableEnvironment, Types}
-import org.apache.flink.table.sinks.{CsvTableSink, TableSink}
+import org.apache.flink.table.api.{TableEnvironment, Types}
+import org.apache.flink.table.sinks.CsvTableSink
 import org.apache.flink.types.Row
 import org.apache.flink.table.api.scala._
-import org.apache.flink.table.descriptors.FileSystem
 
 
 /**
@@ -21,6 +21,7 @@ import org.apache.flink.table.descriptors.FileSystem
   * 加载csv文件处理
   * InkBamboo:测试通过
   */
+@deprecated
 object batchTable{
   import org.apache.flink.api.scala._
   def main(args: Array[String]): Unit = {
@@ -116,7 +117,7 @@ object batchTable{
           """.stripMargin)*/
 
 
-    //数据写出到hdfs上  **未成功
+    //数据写出到hdfs上  **未成功   可以使用转换为dataset之后在写入hdfs即可
    /* tableEnv.connect((new FileSystem).path("hdfs:///zh/csvSinkTable/csvSinkTable.csv")).registerTableSink("hdfsCsvSinkTable")
 
     tableEnv.sqlUpdate(
@@ -133,20 +134,20 @@ object batchTable{
 /**
   * InkBamboo :测试通过数据正常输出
   */
-object TableAPITest {
+object TableAPITest2 {
   import org.apache.flink.api.scala._
 
   def main(args: Array[String]): Unit = {
-    val arr = Array(new DataPackage(1,"a",2),new DataPackage(2,"b",3),new DataPackage(3,"c",4))
+    val arr = Array(new TableSourceBean(1,"a",2),new TableSourceBean(2,"b",3),new TableSourceBean(3,"c",4))
     val env = ExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
     val tblenv = TableEnvironment.getTableEnvironment(env)
 
     val source =  env.fromCollection(arr)
     val tbl1 = tblenv.fromDataSet(source).as("id,name,id2")   //as用逗号分割，重命名列名
-    tblenv.registerTable("dataPackage",tbl1)
+    tblenv.registerTable("TableSourceBean",tbl1)
 
-    val tblAPIResult = tblenv.scan("dataPackage").select("id,name,id2")
+    val tblAPIResult = tblenv.scan("TableSourceBean").select("id,name,id2")
     tblenv.toDataSet[Row](tblAPIResult).print()
 
     //println("-----------------id--------"+tblAPIResult.toString())
@@ -159,5 +160,5 @@ object TableAPITest {
   }
 }
 
-case class DataPackage(id:Int,name:String,id2:Int) extends Serializable
+
 case class tableSchema(id:String,id2:String,id3:String,flag:String,number:String)
