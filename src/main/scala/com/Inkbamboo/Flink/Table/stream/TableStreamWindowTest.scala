@@ -43,6 +43,7 @@ object TableStreamWindowTest extends App {
   // 创建 PojoCsvInputFormat
   val csvInput = new PojoCsvInputFormat[UserBehavior](filepath,pojoType,fieldOrder)//.asInstanceOf[PojoTypeInfo[UserBehavior]]
 
+  //调用Datastream API的assignAscendingTimestamps指定EventTime和watermark信息，并在Datastream中将第一个字段提取出来并指定为EventTime字段
   val watermark = env
     // 创建数据源，得到 UserBehavior 类型的 DataStream
     .createInput(csvInput)//(pojoType)
@@ -50,6 +51,11 @@ object TableStreamWindowTest extends App {
     // 原始数据单位秒，将其转成毫秒
     .assignAscendingTimestamps(assign=>assign.timestamp*1000)
 
+  /**
+    * tableApI相关操作
+    */
+  //在table schema末尾使用'timestamp.rowtime 定义EventTime字段
+  //********** 系统会从TableEnvironment中获取EventTime的信息
   val table = tenv.fromDataStream(watermark,'userId,'itemId,'categoryId,'behavior,'timestamp.rowtime)
   //设置滚动窗口时间为5分钟，并且时间类型为eventtime
   //设置 时间窗口的名称为eventwindow
@@ -59,6 +65,18 @@ object TableStreamWindowTest extends App {
     //设置需要查询的字段,以及计算方式，获取窗口的开始时间，结束时间(含窗口区间的上界)，结束时间(不含窗口区间上界)
     .select('behavior,'itemId.count,'eventwindow.start,'eventwindow.end,'eventwindow.rowtime)
       .toAppendStream[Row].print()
+
+println("-------------------------------")
+  //当在第一个字段上定义'timestamp.rowtime时，
+  // ********** 系统使用Datastream中对应字段作为EventTime字段
+  tenv.fromDataStream(watermark,'timestamp.rowtime,'userId,'itemId,'categoryId,'behavior)
+      .window(Tumble over 10.minutes on 'timestamp as 'eventwindow)
+      .groupBy('eventwindow,'categoryId)
+      .select('categoryId,'itemId.count,'eventwindow.start,'eventwindow.end,'eventwindow.rowtime)
+      .toAppendStream[Row].print()
+
+
+
 
 
   env.execute("tableWindowTest")
