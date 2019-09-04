@@ -136,19 +136,29 @@ object batchTable{
   */
 object TableAPITest2 {
   import org.apache.flink.api.scala._
-
+  import org.apache.flink.table.api.scala._
   def main(args: Array[String]): Unit = {
     val arr = Array(new TableSourceBean(1,"a",2),new TableSourceBean(2,"b",3),new TableSourceBean(3,"c",4))
     val env = ExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
     val tblenv = TableEnvironment.getTableEnvironment(env)
 
-    val source =  env.fromCollection(arr)
-    val tbl1 = tblenv.fromDataSet(source).as("id,name,id2")   //as用逗号分割，重命名列名
-    tblenv.registerTable("TableSourceBean",tbl1)
+    val source:DataSet[TableSourceBean] =  env.fromCollection(arr)
+
+    //val tbl1 = tblenv.fromDataSet(source).as("id,name,field")   //as用逗号分割，重命名列名
+    //指定id为时间字段，并且为processtime, id.rowtime
+    val tbl1 = tblenv.fromDataSet(source,'id,'name,'field)
+    //设置滚动窗口时间为1小时，并且时间类型为eventtime
+    //设置 时间窗口的名称为eventwindow
+    tbl1.window(Tumble over 1.hour on 'rowtime as 'eventwindow)
+      //窗口设置之后必须使用groupby，如果不指定分组的id，则与globalwindow一样，所有的数据全部发送到一个task上
+      .groupBy('eventwindow,'id)
+      //设置需要查询的字段,以及计算方式，获取窗口的开始时间，结束时间(含窗口区间的上界)，结束时间(不含窗口区间上界)
+      .select('id,'name,'id.count,'window.start,'window.end,'window.rowtime)
+      .toDataSet[Row].print()
 
     val tblAPIResult = tblenv.scan("TableSourceBean").select("id,name,id2")
-    tblenv.toDataSet[Row](tblAPIResult).print()
+    //tblenv.toDataSet[Row](tblAPIResult).print()
 
     //println("-----------------id--------"+tblAPIResult.toString())
 

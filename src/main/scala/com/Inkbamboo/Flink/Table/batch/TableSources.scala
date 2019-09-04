@@ -4,10 +4,11 @@ import java.util
 
 import com.Inkbamboo.beans.TableSourceBean
 import org.apache.flink.api.scala.ExecutionEnvironment
-import org.apache.flink.table.api.{Table, TableEnvironment}
+import org.apache.flink.table.api.{Table, TableEnvironment, Types}
 import org.apache.flink.table.api.scala.BatchTableEnvironment
 import org.apache.flink.table.catalog.{ExternalCatalog, ExternalCatalogTable}
 import org.apache.flink.table.descriptors.Kafka
+import org.apache.flink.table.sources.CsvTableSource
 
 
 /**
@@ -50,6 +51,37 @@ class TableSources {
       tblenv.registerDataSet("CsvTable",csvds,'user_id,'pro_id,'pro_type_id,'act_type,'timestamp)
 
     }
+
+  /**
+    * table API中支持CSV,text,json等格式文件的读取
+    *
+    * 测试通过
+    * @param tblenv
+    * @param env
+    */
+  def sourceFromCSV2File(tblenv:BatchTableEnvironment,env:ExecutionEnvironment): Unit ={
+    //使用CsvTableSource 读取csv格式的文件数据，并注册成表
+    //flink集成了旧版本的csv文件，新版跟的需要导入flink-csv依赖。对应的json，parquet,avro格式的文件都需要依赖
+    val source = CsvTableSource.builder()
+      .path(this.getClass.getClassLoader.getResource("UserBehavior.csv").getPath)
+      .lineDelimiter("\n")
+      .fieldDelimiter(",")
+      .ignoreFirstLine()
+      .field("user_id",Types.LONG)
+      .field("pro_id",Types.LONG)
+      .field("pro_type_id",Types.STRING)
+      .field("act_type",Types.STRING)
+      .field("timestamp",Types.STRING)
+      .build()
+
+    //注册成表
+    tblenv.registerTableSource("csv2Tbl",source)
+
+
+    val csvds:DataSet[(String,String,String,String,Long)] = env.readCsvFile("hdfs:///zh/csvSinkTable/csvSinkTable.csv")
+    tblenv.registerDataSet("CsvTable",csvds,'user_id,'pro_id,'pro_type_id,'act_type,'timestamp)
+
+  }
 
   /**
     *自定义注册外部数据源

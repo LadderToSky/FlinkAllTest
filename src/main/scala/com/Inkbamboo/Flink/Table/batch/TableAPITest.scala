@@ -27,9 +27,11 @@ object TableAPITest extends App {
     * 考虑使用泛型解决，还没找到有效手段
     * 暂时使用Row做统一处理(ps:原生Flink SQL中，都统一使用了一种叫 Row 的数据结构)
     */
-  tableSources.sourceFromCSVFile(tableEnvironment,env)
-  tableOperators.dataQuery(tableEnvironment,"CsvTable")
+  //tableSources.sourceFromCSVFile(tableEnvironment,env)
+  //tableOperators.dataQuery(tableEnvironment,"CsvTable")
 
   //tableSources.sourceFromCSVFile(tableEnvironment,env)
 
+  tableSources.sourceFromCSV2File(tableEnvironment,env)
+  tableOperators.dataQuery(tableEnvironment,"csv2Tbl")
 }

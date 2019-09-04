@@ -26,7 +26,9 @@ class TableOperators {
         |select * from $tblNm
       """.stripMargin)
 
-
+    /*import org.apache.flink.table.api.scala._
+    import org.apache.flink.api.scala._
+    resData.toDataSet[Row].print()*/
 
     import org.apache.flink.table.api.scala._
     val groubyData = resData
@@ -35,7 +37,7 @@ class TableOperators {
                       //根据act_type 分组
                       .groupBy('act_type)
                       //将分组后的数据计数统计
-                      .select('act_type,'timestamp.sum as 'sum2)
+                      .select('act_type,'user_id.sum as 'sum2)
 
      //输出表的schema信息
      groubyData.printSchema()
