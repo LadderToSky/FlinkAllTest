@@ -7,8 +7,9 @@ import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.table.api.{Table, TableEnvironment, Types}
 import org.apache.flink.table.api.scala.BatchTableEnvironment
 import org.apache.flink.table.catalog.{ExternalCatalog, ExternalCatalogTable}
-import org.apache.flink.table.descriptors.Kafka
+import org.apache.flink.table.descriptors._
 import org.apache.flink.table.sources.CsvTableSource
+import org.apache.flink.types.Row
 
 
 /**
@@ -85,35 +86,63 @@ class TableSources {
 
   /**
     *自定义注册外部数据源
-    * 以mysql数据源为例
+    * 以文件系统为例，读取外部数据源
     */
   def sourceFromMysql(tblenv:BatchTableEnvironment,env:ExecutionEnvironment): Unit ={
 
+    /**
+      * 指定connector的类型 kafka/ fileSystem等 自定义
+      */
+    tblenv.connect(new FileSystem().path("/Users/inkbamboo/Documents/csv/"))
+      //定义数据源获取的格式信息，现在看到的支持Csv和json
+      //更多格式，需要自定义
+      .withFormat(new Csv()
+        .lineDelimiter("\n")
+        .fieldDelimiter(",")
+        .ignoreFirstLine()
+        .field("user_id",Types.LONG)
+        .field("pro_id",Types.LONG)
+        .field("pro_type_id",Types.STRING)
+        .field("act_type",Types.STRING)
+        .field("timestamp",Types.STRING))
+      //执行创建表的对应shcema信息
+      //对于streamTable还可以在指定schema时，定义时间类型rowtime(event_time) or processtime 以及watermark等信息
+      .withSchema(new Schema()
+        .field("user_id",Types.LONG)
+        .field("pro_id",Types.LONG)
+        .field("pro_type_id",Types.STRING)
+        .field("act_type",Types.STRING)
+        .field("timestamp",Types.STRING))
+      .registerTableSource("localFileSystemTbl")
+
+
+    //测试读取数据
+    tblenv.scan("localFileSystemTbl")
+      .toDataSet[Row].print()
+
+    tblenv.scan("localFileSystemTbl").printSchema()
+
+    /**
+      * root
+      * |-- user_id: Long
+      * |-- pro_id: Long
+      * |-- pro_type_id: String
+      * |-- act_type: String
+      * |-- timestamp: String
+      */
   }
 
 
 }
 
 /**
-  * 自定义mysql数据源作为table的外部数据源
-  *
-  *
+  * 数据源测试代码
   */
-/*class externalSourceMysql extends ExternalCatalog{
-  override def getTable(tableName: String): ExternalCatalogTable ={
-      return ExternalCatalogTable.builder((new Kafka)).asTableSink()
-  }
+object TableSources extends App{
 
+  private val environment: ExecutionEnvironment = ExecutionEnvironment.getExecutionEnvironment
+  private val tblEnv: BatchTableEnvironment = TableEnvironment.getTableEnvironment(environment)
 
-  override def listTables(): util.List[String] = {
-
-  }
-
-  override def getSubCatalog(dbName: String): ExternalCatalog = {
-
-  }
-
-  override def listSubCatalogs(): util.List[String] = {
-
-  }
-}*/
+  private val sources = new TableSources
+  sources.sourceFromMysql(tblEnv,environment)
+}
